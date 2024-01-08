@@ -29,6 +29,7 @@ import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/dev/VRFConsumerBa
 error Raffle__NOTENOUGHSENT();
 error Raffle__NOTENOUGHTIMEPASSED();
 error Raffle__TRANSFERFAILED();
+error Raffle__CALCULATINGWINNER();
 
 /** @title A sample Raffle contract 
  *  @author Atharv Bobade
@@ -49,13 +50,18 @@ contract Raffle is VRFConsumerBaseV2{
     uint256 private s_lastimestamp;
     address private s_recentWinner;
     address[] private s_players;
+    RaffleState private s_raffleState;
     
-    
+    enum RaffleState{
+        OPEN,
+        CALCULATING
+    }
     //////////////
     /// Events /// 
     //////////////
 
     event RaffleEnter(address indexed player);
+    event WinnerPicked(address indexed player);
     
     constructor(uint256 entranceFee, uint256 interval, address vrfCoordinator,bytes32 keyHash, uint64 subscriptionId, uint32 callbackGasLimit) VRFConsumerBaseV2(vrfCoordinator){
         i_raffleEntranceFee = entranceFee;
@@ -65,6 +71,7 @@ contract Raffle is VRFConsumerBaseV2{
         i_keyHash = keyHash;
         i_subscriptionId = subscriptionId;
         i_callbackGasLimit = callbackGasLimit;
+        s_raffleState = RaffleState.OPEN;
     }
 
     /////////////////
@@ -75,6 +82,9 @@ contract Raffle is VRFConsumerBaseV2{
         if (i_raffleEntranceFee > msg.value) {
             revert Raffle__NOTENOUGHSENT();
         }
+        if (s_raffleState != RaffleState.OPEN) {
+            revert Raffle__CALCULATINGWINNER(); 
+        }
         s_players.push(msg.sender);
         emit RaffleEnter(msg.sender);
     }
@@ -83,6 +93,7 @@ contract Raffle is VRFConsumerBaseV2{
         if (block.timestamp - s_lastimestamp < i_interval) {
             revert Raffle__NOTENOUGHTIMEPASSED();
         }
+        s_raffleState = RaffleState.CALCULATING;
         uint256 requestId = i_vrfCoordinator.requestRandomWords(
             i_keyHash,
             i_subscriptionId,
@@ -98,10 +109,14 @@ contract Raffle is VRFConsumerBaseV2{
     ) internal override {
         uint256 indexOfWinner = _randomWords[0] % s_players.length;
         address winner = s_players[indexOfWinner];
+        s_raffleState = RaffleState.OPEN;
+        s_players = new address[](0);
+        s_lastimestamp = block.timestamp;
         (bool success,) = winner.call{value:address(this).balance}("");
         if (!success){
             revert Raffle__TRANSFERFAILED();
         }
+        emit WinnerPicked(winner);
     }
 
     ////////////////////////
