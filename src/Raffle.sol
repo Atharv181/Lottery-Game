@@ -30,6 +30,7 @@ error Raffle__NOTENOUGHSENT();
 error Raffle__NOTENOUGHTIMEPASSED();
 error Raffle__TRANSFERFAILED();
 error Raffle__CALCULATINGWINNER();
+error Raffle__UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint256 raffleState);
 
 /** @title A sample Raffle contract 
  *  @author Atharv Bobade
@@ -62,6 +63,7 @@ contract Raffle is VRFConsumerBaseV2{
 
     event RaffleEnter(address indexed player);
     event WinnerPicked(address indexed player);
+    event RequestedRaffleWinner(uint256 requestId);
     
     constructor(uint256 entranceFee, uint256 interval, address vrfCoordinator,bytes32 keyHash, uint64 subscriptionId, uint32 callbackGasLimit) VRFConsumerBaseV2(vrfCoordinator){
         i_raffleEntranceFee = entranceFee;
@@ -89,9 +91,23 @@ contract Raffle is VRFConsumerBaseV2{
         emit RaffleEnter(msg.sender);
     }
 
-    function pickWinner() external {
-        if (block.timestamp - s_lastimestamp < i_interval) {
-            revert Raffle__NOTENOUGHTIMEPASSED();
+    function checkUpkeep(bytes memory /* checkData */) public view returns (bool upkeepNeeded, bytes memory /* performData */){
+        bool isOpen = RaffleState.OPEN == s_raffleState;
+        bool timePassed = ((block.timestamp - s_lastimestamp) > i_interval);
+        bool hasPlayers = s_players.length > 0;
+        bool hasBalance = address(this).balance > 0;
+        upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers);
+        return (upkeepNeeded, "0x0");
+    }
+
+    function performUpkeep(bytes calldata /* performData */) external {
+        (bool upkeepNeeded, ) = checkUpkeep("");
+        if (!upkeepNeeded) {
+            revert Raffle__UpkeepNotNeeded(
+                address(this).balance,
+                s_players.length,
+                uint256(s_raffleState)
+            );
         }
         s_raffleState = RaffleState.CALCULATING;
         uint256 requestId = i_vrfCoordinator.requestRandomWords(
@@ -101,12 +117,10 @@ contract Raffle is VRFConsumerBaseV2{
             i_callbackGasLimit,
             NUM_RANDOM_WORDS
         );
+        emit RequestedRaffleWinner(requestId);
     }
 
-    function fulfillRandomWords(
-        uint256 _requestId,
-        uint256[] memory _randomWords
-    ) internal override {
+    function fulfillRandomWords(uint256 /* _requestId */, uint256[] memory _randomWords) internal override {
         uint256 indexOfWinner = _randomWords[0] % s_players.length;
         address winner = s_players[indexOfWinner];
         s_raffleState = RaffleState.OPEN;
