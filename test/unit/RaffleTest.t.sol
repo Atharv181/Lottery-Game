@@ -33,6 +33,7 @@ contract RaffleTest is Test {
         keyHash,
         subscriptionId, 
         callbackGasLimit) = helperConfig.activeNetworkConfig();
+        vm.deal(PLAYER, entranceFee);
     }
 
     function testRaffleInitializesInOpenState() public view {
@@ -49,7 +50,6 @@ contract RaffleTest is Test {
     function testRaffleRecordsPlayerWhenTheyEnter() public {
         uint256 entryFee = raffle.getEntranceFee();
         vm.prank(PLAYER);
-        vm.deal(PLAYER, entryFee);
         raffle.enterRaffle{value: entryFee}();
         assert(raffle.getPlayerCount() == 1);
         assert(raffle.getPlayerByIndex(0) == PLAYER);
@@ -57,9 +57,20 @@ contract RaffleTest is Test {
 
     function testEmitEventOnEntrance() public {
         vm.prank(PLAYER);
-        vm.deal(PLAYER, entranceFee);
         vm.expectEmit(true, false, false, false, address(raffle));
         emit RaffleEnter(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+    }
+
+    function testCantEnterWhenRaffleIsCalculating() public {
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+
+        raffle.performUpkeep("");
+        vm.expectRevert(Raffle.Raffle__CALCULATINGWINNER.selector);
+        vm.prank(PLAYER);
         raffle.enterRaffle{value: entranceFee}();
     }
 }

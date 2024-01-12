@@ -26,11 +26,6 @@ pragma solidity ^0.8.18;
 import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/dev/VRFConsumerBaseV2.sol";
 
-error Raffle__NOTENOUGHSENT();
-error Raffle__NOTENOUGHTIMEPASSED();
-error Raffle__TRANSFERFAILED();
-error Raffle__CALCULATINGWINNER();
-error Raffle__UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint256 raffleState);
 
 /** @title A sample Raffle contract 
  *  @author Atharv Bobade
@@ -38,6 +33,12 @@ error Raffle__UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint25
  *  @dev Implementation of Raffle contract using chainlink VRFv2
 */
 contract Raffle is VRFConsumerBaseV2{
+
+    error Raffle__NOTENOUGHSENT();
+    error Raffle__NOTENOUGHTIMEPASSED();
+    error Raffle__TRANSFERFAILED();
+    error Raffle__CALCULATINGWINNER();
+    error Raffle__UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint256 raffleState);
 
     VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
     bytes32 private immutable i_keyHash;
