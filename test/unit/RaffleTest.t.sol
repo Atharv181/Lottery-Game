@@ -34,4 +34,12 @@ contract RaffleTest is Test {
     function testRaffleInitializesInOpenState() public view {
         assert(raffle.getRaffleState() == Raffle.RaffleState.OPEN);
     }
+
+    function testEnterRaffleWhenYouDontSendEnoughEth() public {
+        uint256 entryFee = raffle.getEntranceFee();
+        vm.assume(entryFee > 1);
+        vm.expectRevert();
+        raffle.enterRaffle{value: entryFee - 1}();
+    }
+
 }
