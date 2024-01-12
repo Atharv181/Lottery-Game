@@ -19,6 +19,8 @@ contract RaffleTest is Test {
     uint64 subscriptionId; 
     uint32 callbackGasLimit;
 
+    address public PLAYER = makeAddr("PLAYER");
+
     function setUp() external {
         DeployRaffle deployRaffle = new DeployRaffle();
         (raffle,helperConfig) = deployRaffle.run();
@@ -42,4 +44,12 @@ contract RaffleTest is Test {
         raffle.enterRaffle{value: entryFee - 1}();
     }
 
+    function testRaffleRecordsPlayerWhenTheyEnter() public {
+        uint256 entryFee = raffle.getEntranceFee();
+        vm.prank(PLAYER);
+        vm.deal(PLAYER, entryFee);
+        raffle.enterRaffle{value: entryFee}();
+        assert(raffle.getPlayerCount() == 1);
+        assert(raffle.getPlayerByIndex(0) == PLAYER);
+    }
 }
