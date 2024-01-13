@@ -8,10 +8,8 @@
   - [Start a local node](#start-a-local-node)
   - [Library](#library)
   - [Deploy](#deploy)
-  - [Deploy - Other Network](#deploy---other-network)
   - [Testing](#testing)
-    - [Test Coverage](#test-coverage)
-- [Deployment to a testnet or mainnet](#deployment-to-a-testnet-or-mainnet)
+  - [Test Coverage](#test-coverage)
   - [Scripts](#scripts)
   - [Estimate gas](#estimate-gas)
 - [Formatting](#formatting)
@@ -29,8 +27,8 @@
 ## Quickstart
 
 ```
-git clone https://github.com/Cyfrin/foundry-smart-contract-lottery-f23
-cd foundry-smart-contract-lottery-f23
+git clone https://github.com/Atharv181/Lottery-Game
+cd Lottery-Game
 forge build
 ```
 
