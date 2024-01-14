@@ -78,7 +78,7 @@ contract RaffleTest is Test {
     }
 
     function testCheckUpkeepReturnsFalseIfItHasNoBalance() public {
-        vm.warp(block.timestamp + automationUpdateInterval + 1);
+        vm.warp(block.timestamp + interval + 1);
         vm.roll(block.number + 1);
         (bool upkeepNeeded, ) = raffle.checkUpkeep("");
         assert(!upkeepNeeded);
@@ -86,8 +86,8 @@ contract RaffleTest is Test {
 
     function testCheckUpkeepReturnsFalseIfRaffleIsntOpen() public {
         vm.prank(PLAYER);
-        raffle.enterRaffle{value: raffleEntranceFee}();
-        vm.warp(block.timestamp + automationUpdateInterval + 1);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1);
         vm.roll(block.number + 1);
         raffle.performUpkeep("");
         Raffle.RaffleState raffleState = raffle.getRaffleState();
