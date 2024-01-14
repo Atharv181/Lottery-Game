@@ -16,11 +16,12 @@ contract CreateSubscription is Script {
             address vrfCoordinatorV2,
             ,
             ,
+            ,
         ) = helperConfig.activeNetworkConfig();
         return createSubscription(vrfCoordinatorV2);
     }
 
-    function createSubscription( address vrfCoordinatorV2 ) public returns (uint64) {
+    function createSubscription(address vrfCoordinatorV2) public returns (uint64) {
         vm.startBroadcast();
         uint64 subId = VRFCoordinatorV2Mock(vrfCoordinatorV2).createSubscription();
         vm.stopBroadcast();
@@ -29,5 +30,26 @@ contract CreateSubscription is Script {
 
     function run() external returns (uint64) {
         return createSubscriptionUsingConfig();
+    }
+}
+
+contract FundSubscription is Script {
+    uint96 public constant FUND_AMOUNT = 2 ether;
+
+    function fundSubscriptionUsingConfig() public {
+        HelperConfig helperConfig = new HelperConfig();
+        (
+            ,
+            ,
+            address vrfCoordinatorV2,
+            ,
+            uint64 subscriptionId,
+            ,
+            address link
+        ) = helperConfig.activeNetworkConfig();
+    }
+
+    function run() external  {
+        fundSubscriptionUsingConfig();
     }
 }

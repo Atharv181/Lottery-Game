@@ -20,6 +20,7 @@ contract RaffleTest is Test {
     bytes32 keyHash;
     uint64 subscriptionId; 
     uint32 callbackGasLimit;
+    address link;
 
     address public PLAYER = makeAddr("PLAYER");
 
@@ -32,7 +33,8 @@ contract RaffleTest is Test {
         vrfCoordinator,
         keyHash,
         subscriptionId, 
-        callbackGasLimit) = helperConfig.activeNetworkConfig();
+        callbackGasLimit,
+        link) = helperConfig.activeNetworkConfig();
         vm.deal(PLAYER, entranceFee);
     }
 
